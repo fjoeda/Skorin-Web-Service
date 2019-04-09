@@ -1,28 +1,18 @@
 import requests
+import uuid
+from flask import jsonify
+from text_analytics import TextAnalytics 
+
 
 subscription_key = '969c349c3c4043b3890c3c16a8f1d11f'
-base_url = "https://southeastasia.api.cognitive.microsoft.com/text/analytics/v2.0/"
-entity_api_url = base_url+'entities'
 
-sentences = ['i have a good feeleng about John Terry', 'Joko Widodo seems so nice of meeting Joko Widodo at 26 June 1996', 
-        'i didnt want to come over to Nebraska ','it is wonderful day','i didnt want to come over to Nebraska ','it is wonderful day']
+sentences = ['kampanye sandiaga uno rame','pangeran diponegoro menang perang',
+                'Indonesia merdeka tanggal 17 Agustus 1945']
 
-sencente_list = []
-for i in range(len(sentences)):
-    sencente_list.append({'id':str(i+1),'text':sentences[i]})
+trans_subscription_key = 'e662fdd673dc4ad5b2cff8e66e919ddf'
 
-documents = {'documents' : sencente_list}
-headers   = {'Ocp-Apim-Subscription-Key': subscription_key}
-response  = requests.post(entity_api_url, headers=headers, json=documents)
-entity = response.json()
-entites = []
+text_anal = TextAnalytics(subscription_key,trans_subscription_key)
 
-for entity_item in entity['documents']:
-    entity_str = "entList "
-    for item in entity_item['entities']:
-        entity_str += item['matches'][0]['text'] +' '
-    entites.append(entity_str)
+result = text_anal.get_translation(sentences)
 
-print(entites)
-
-print(entity['documents'][0]['entities'][0]['matches'][0]['text'])
+print(result)
