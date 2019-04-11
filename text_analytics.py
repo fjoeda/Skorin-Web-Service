@@ -1,4 +1,3 @@
-from langdetect import detect_langs
 import uuid
 import requests
 
@@ -18,7 +17,7 @@ class TextAnalytics:
             sencente_list.append({'id':str(i+1),'language':'en','text':list_of_text[i]})
 
         documents = {'documents' : sencente_list}
-        headers   = {'Ocp-Apim-Subscription-Key': self.key}
+        headers   = {'Ocp-Apim-Subscription-Key': self.text_key}
         response  = requests.post(key_phrase_api_url, headers=headers, json=documents)
         key_phrases = response.json()
         phrases = []
@@ -36,7 +35,7 @@ class TextAnalytics:
         for i in range(len(list_of_text)):
             sencente_list.append({'id':str(i+1),'text':list_of_text[i]})
         documents = {'documents' : sencente_list}
-        headers   = {'Ocp-Apim-Subscription-Key': self.key}
+        headers   = {'Ocp-Apim-Subscription-Key': self.text_key}
         response  = requests.post(entity_api_url, headers=headers, json=documents)
         entity = response.json()
         entities = []
@@ -69,13 +68,40 @@ class TextAnalytics:
 
         response = requests.post(constructed_url, headers=headers, json=body)
         res = response.json()
-        result_txt = res[0]['translations'][0]['text']
         result = []
-        for i in len(res):
+        for i in range(len(res)):
             result.append(res[i]['translations'][0]['text'])
 
         return result
 
-    def is_all_english(list_of_text):
-        for text in list_of_text:
+    def get_non_english_answer(self,list_of_text):
+        language_api_url = self.text_cs_url + "languages"
+        sentence_list = []
+
+        for i in range(len(list_of_text)):
+            sentence_list.append({'id':str(i+1),'text':list_of_text[i]})
+        documents = {'documents' : sentence_list}
+        headers   = {'Ocp-Apim-Subscription-Key': self.text_key}
+        response  = requests.post(language_api_url, headers=headers, json=documents)
+        languages = response.json()
+        result = []
+        for i in range(len(languages['documents'])):
+            if languages['documents'][i]['detectedLanguages'][0]['iso6391Name'] != 'en':
+                result.append(i)
+        return result
             
+
+    def compose_all_english_answer(self,list_of_text):
+        non_en_list = []
+        non_en_index = self.get_non_english_answer(list_of_text)
+        for i in range(len(list_of_text)):
+            if i in non_en_index:
+                non_en_list.append(list_of_text[i])
+
+        non_en_translated = self.get_translation(non_en_list)
+
+        for i in range(len(non_en_index)):
+            list_of_text[non_en_index[i]] = non_en_translated[i]
+        
+        return list_of_text
+        
