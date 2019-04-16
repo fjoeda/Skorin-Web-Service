@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from text_analytics import TextAnalytics
 
 app = Flask(__name__)
 
@@ -12,6 +13,11 @@ def test_request():
     jawaban_list = jawaban_request["jawaban"]
     print(jawaban_list)
     return "ok"
+
+@app.route("/koreksi/",methods = ["POST"])
+def koreksi():
+    jawaban_request = request.json
+    jawaban_list = jawaban_request["jawaban"]
 
 
 if __name__ == "__main__":

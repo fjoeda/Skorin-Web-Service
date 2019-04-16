@@ -1,5 +1,9 @@
 import uuid
 import requests
+from collections import Counter
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 class TextAnalytics:
 
@@ -104,4 +108,47 @@ class TextAnalytics:
             list_of_text[non_en_index[i]] = non_en_translated[i]
         
         return list_of_text
-        
+
+class AnswerChecker:
+
+    def __init__(self,text_key,trans_key):
+        self.text_key = text_key
+        self.trans_key = trans_key
+        self.text_analytics = TextAnalytics(text_key,trans_key)
+
+    def get_similarity(self,text1,text2):
+        similarity_val = self.get_cosine_sim(text1,text2)
+        return similarity_val[0][1]
+
+    def get_cosine_sim(self,*strs): 
+        vectors = [t for t in self.get_vectors(*strs)]
+        return cosine_similarity(vectors)
+    
+    def get_vectors(self,*strs):
+        text = [t for t in strs]
+        vectorizer = CountVectorizer(text)
+        vectorizer.fit(text)
+        return vectorizer.transform(text).toarray()
+
+    def get_list_compare(self,entity_cor,keyph_cor,jawab_entity,jawab_keyph):
+        skor_list = []
+        for i in range(len(entity_cor)):
+            entity_skor = self.get_similarity(entity_cor[i],jawab_entity[i])
+            keyph_skor = self.get_similarity(keyph_cor[i],jawab_keyph[i])
+            avg_skor = (entity_skor+keyph_skor)/2
+            skor_list.append(avg_skor)
+
+        return skor_list
+
+    def compareJawaban(self,list_benar, list_siswa):
+        list_skor = []
+        correct_entity = self.text_analytics.get_entities(list_benar)
+        correct_keyPhrase = self.text_analytics.get_key_phrases(list_benar)
+        for siswa in list_siswa:
+            jawab_entity = self.text_analytics.get_entities(siswa["jawaban"])
+            jawab_keyPh = self.text_analytics.get_key_phrases(siswa["jawaban"])
+            list_skor_siswa = self.get_list_compare(correct_entity,correct_keyPhrase,jawab_entity,jawab_keyPh)
+            list_skor.append({"siswa":siswa["siswa"],"skor_jawaban":list_skor_siswa})
+
+        return list_skor
+
