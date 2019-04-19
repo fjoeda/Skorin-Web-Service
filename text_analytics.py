@@ -3,6 +3,8 @@ import requests
 from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import pickle
 
 
 class TextAnalytics:
@@ -26,7 +28,7 @@ class TextAnalytics:
         key_phrases = response.json()
         phrases = []
         for phrase in key_phrases['documents']:
-            phrase_str = ""
+            phrase_str = "keyPhrases "
             for item in phrase['keyPhrases']:
                 phrase_str += item +" "
             phrases.append(phrase_str)
@@ -66,15 +68,20 @@ class TextAnalytics:
 
         # You can pass more than one object in body.
         body = []
-        
+        result = []
+        index = 0
+        total_call = 0
         for text in list_of_text:
             body.append({'text':text})
-
-        response = requests.post(constructed_url, headers=headers, json=body)
-        res = response.json()
-        result = []
-        for i in range(len(res)):
-            result.append(res[i]['translations'][0]['text'])
+            index += 1
+            total_call += 1
+            if index == 20 or total_call == len(list_of_text):
+                index = 0
+                response = requests.post(constructed_url, headers=headers, json=body)
+                res = response.json()
+                for i in range(len(res)):
+                    result.append(res[i]['translations'][0]['text'])
+                body = []
 
         return result
 
@@ -98,20 +105,22 @@ class TextAnalytics:
     def compose_all_english_answer(self,list_of_text):
         non_en_list = []
         non_en_index = self.get_non_english_answer(list_of_text)
-        for i in range(len(list_of_text)):
-            if i in non_en_index:
-                non_en_list.append(list_of_text[i])
+        if len(non_en_index) == 0:
+            for i in range(len(list_of_text)):
+                if i in non_en_index:
+                    non_en_list.append(list_of_text[i])
 
-        non_en_translated = self.get_translation(non_en_list)
+            non_en_translated = self.get_translation(non_en_list)
 
-        for i in range(len(non_en_index)):
-            list_of_text[non_en_index[i]] = non_en_translated[i]
+            for i in range(len(non_en_index)):
+                list_of_text[non_en_index[i]] = non_en_translated[i]
         
         return list_of_text
 
 class AnswerChecker:
 
     def __init__(self,text_key,trans_key):
+        self.loaded_model = pickle.load(open('ml_model.pk','rb'))
         self.text_key = text_key
         self.trans_key = trans_key
         self.text_analytics = TextAnalytics(text_key,trans_key)
@@ -130,24 +139,49 @@ class AnswerChecker:
         vectorizer.fit(text)
         return vectorizer.transform(text).toarray()
 
-    def get_list_compare(self,entity_cor,keyph_cor,jawab_entity,jawab_keyph):
+    def get_jaccard_sim(self,str1, str2): 
+        a = set(str1.split()) 
+        b = set(str2.split())
+        c = a.intersection(b)
+        return float(len(c)) / (len(a) + len(b) - len(c))
+
+    def get_list_compare(self,jawab_benar_list,jawab_siswa_list,entity_cor,keyph_cor,jawab_entity,jawab_keyph):
         skor_list = []
+        wrong_ans = 0
+        half_right_ans = 0
+        right_ans = 0
         for i in range(len(entity_cor)):
-            entity_skor = self.get_similarity(entity_cor[i],jawab_entity[i])
-            keyph_skor = self.get_similarity(keyph_cor[i],jawab_keyph[i])
-            avg_skor = (entity_skor+keyph_skor)/2
-            skor_list.append(avg_skor)
+            jawab_benar_word = len(jawab_benar_list[i].split())
+            word_diff = abs(len(jawab_benar_list[i].split())-len(jawab_benar_list[i].split()))
+            entity_cos_skor = self.get_similarity(entity_cor[i],jawab_entity[i])
+            keyph_cos_skor = self.get_similarity(keyph_cor[i],jawab_keyph[i])
+            entity_jac_skor = self.get_jaccard_sim(entity_cor[i],jawab_entity[i])
+            keyph_jac_skor = self.get_jaccard_sim(keyph_cor[i],jawab_keyph[i])
+            pred_score = np.array([jawab_benar_word,word_diff,entity_cos_skor,entity_jac_skor,keyph_cos_skor,keyph_jac_skor])
+            pred_score = pred_score.reshape(1,-1)
+            pred_value = self.loaded_model.predict(pred_score)
+            print(pred_value)
+            if pred_value == 0:
+                wrong_ans += 1
+            elif pred_value == 1:
+                half_right_ans +=1
+            else:
+                right_ans += 1
+            
+        skor_list.append({'total_wrong':wrong_ans,'total_half_right':half_right_ans,'total_right':right_ans})
 
         return skor_list
 
     def compareJawaban(self,list_benar, list_siswa):
         list_skor = []
-        correct_entity = self.text_analytics.get_entities(list_benar)
-        correct_keyPhrase = self.text_analytics.get_key_phrases(list_benar)
+        list_benar_en = self.text_analytics.compose_all_english_answer(list_benar)
+        correct_entity = self.text_analytics.get_entities(list_benar_en)
+        correct_keyPhrase = self.text_analytics.get_key_phrases(list_benar_en)
         for siswa in list_siswa:
-            jawab_entity = self.text_analytics.get_entities(siswa["jawaban"])
-            jawab_keyPh = self.text_analytics.get_key_phrases(siswa["jawaban"])
-            list_skor_siswa = self.get_list_compare(correct_entity,correct_keyPhrase,jawab_entity,jawab_keyPh)
+            list_jawab_en = self.text_analytics.compose_all_english_answer(siswa["jawaban"])
+            jawab_entity = self.text_analytics.get_entities(list_jawab_en)
+            jawab_keyPh = self.text_analytics.get_key_phrases(list_jawab_en)
+            list_skor_siswa = self.get_list_compare(list_benar,siswa["jawaban"],correct_entity,correct_keyPhrase,jawab_entity,jawab_keyPh)
             list_skor.append({"siswa":siswa["siswa"],"skor_jawaban":list_skor_siswa})
 
         return list_skor
