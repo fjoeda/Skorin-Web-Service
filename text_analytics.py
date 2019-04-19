@@ -160,7 +160,6 @@ class AnswerChecker:
             pred_score = np.array([jawab_benar_word,word_diff,entity_cos_skor,entity_jac_skor,keyph_cos_skor,keyph_jac_skor])
             pred_score = pred_score.reshape(1,-1)
             pred_value = self.loaded_model.predict(pred_score)
-            print(pred_value)
             if pred_value == 0:
                 wrong_ans += 1
             elif pred_value == 1:
@@ -168,11 +167,11 @@ class AnswerChecker:
             else:
                 right_ans += 1
             
-        skor_list.append({'total_wrong':wrong_ans,'total_half_right':half_right_ans,'total_right':right_ans})
+        skor_list.append({'total_jawaban_salah':wrong_ans,'total_jawaban_setengah_benar':half_right_ans,'total_jawaban_benar':right_ans})
 
         return skor_list
 
-    def compareJawaban(self,list_benar, list_siswa):
+    def compare_jawaban(self,list_benar, list_siswa):
         list_skor = []
         list_benar_en = self.text_analytics.compose_all_english_answer(list_benar)
         correct_entity = self.text_analytics.get_entities(list_benar_en)
