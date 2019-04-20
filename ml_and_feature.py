@@ -89,7 +89,7 @@ X_test
 
 #%%
 from sklearn.ensemble import RandomForestClassifier
-clf  = RandomForestClassifier(n_estimators=50)
+clf  = RandomForestClassifier(n_estimators=50, random_state=1000, max_depth=32)
 clf.fit(X_train,Y_train)
 clf.score(X_test,Y_test)
 
@@ -114,7 +114,7 @@ clf.score(X_test,Y_test)
 #%%
 from sklearn.ensemble import RandomForestClassifier
 import pickle
-clf  = KNeighborsClassifier(n_neighbors=5)
+clf  = RandomForestClassifier(n_estimators=50, random_state=1000, max_depth=32)
 clf.fit(X_train,Y_train)
 clf.score(X_test,Y_test)
 pickle.dump(clf,open('ml_model.pk','wb'))
