@@ -24,7 +24,7 @@ for siswa in jawaban_siswa["jawaban_siswa"]:
 
 
 
-trans_subscription_key = 'e662fdd673dc4ad5b2cff8e66e919ddf'
+trans_subscription_key = 'c5573255a62a494a874dc4063d9c9f17'
 
 text_anal = TextAnalytics(subscription_key,trans_subscription_key)
 

@@ -9,7 +9,7 @@ def home():
     return "test ok"
 
 def compare_answer(list_jawaban_benar,list_jawaban_siswa):
-    answer_checker = AnswerChecker('969c349c3c4043b3890c3c16a8f1d11f','e662fdd673dc4ad5b2cff8e66e919ddf')
+    answer_checker = AnswerChecker('969c349c3c4043b3890c3c16a8f1d11f','c5573255a62a494a874dc4063d9c9f17')
     return answer_checker.compare_jawaban(list_jawaban_benar,list_jawaban_siswa)
 
 @app.route("/koreksi/",methods = ["POST"])
