@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pickle
+import math
 
 
 class TextAnalytics:
@@ -178,8 +179,10 @@ class AnswerChecker:
                 half_right_ans +=1
             else:
                 right_ans += 1
-            
-        skor_list.append({'total_jawaban_salah':wrong_ans,'total_jawaban_setengah_benar':half_right_ans,'total_jawaban_benar':right_ans})
+        
+        skor_akhir = round((100/len(jawab_benar_list))*(right_ans+half_right_ans*0.5),2)
+
+        skor_list.append({'total_jawaban_salah':wrong_ans,'total_jawaban_setengah_benar':half_right_ans,'total_jawaban_benar':right_ans,'final_score':skor_akhir})
 
         return skor_list
 
