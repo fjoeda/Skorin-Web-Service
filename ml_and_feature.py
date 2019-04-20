@@ -42,6 +42,8 @@ np.set_printoptions(precision=4)
 data_out = data['kebenaran'].values.tolist()
 jawaban_benar_word = []
 word_difference = []
+cos_sim_all = []
+jac_sim_all = []
 cos_sim_list_en = []
 jac_sim_list_en = []
 cos_sim_list_key = []
@@ -49,6 +51,8 @@ jac_sim_list_key = []
 for i in range(len(jawaban_benar_entity)):
     jawaban_benar_word.append(len(jawaban_benar[i].split()))
     word_difference.append(abs(len(jawaban_benar[i].split())-len(jawaban[i].split())))
+    cos_sim_all.append(round(answ_cek.get_similarity(jawaban_benar[i],jawaban[i]),3))
+    jac_sim_all.append(round(answ_cek.get_jaccard_sim(jawaban_benar[i],jawaban[i]),3))
     cos_sim_list_en.append(round(answ_cek.get_similarity(jawaban_benar_entity[i],jawaban_entity[i]),3))
     jac_sim_list_en.append(round(answ_cek.get_jaccard_sim(jawaban_benar_entity[i],jawaban_entity[i]),3))
     cos_sim_list_key.append(round(answ_cek.get_similarity(jawaban_benar_keyPH[i],jawaban_keyPH[i]),3))
@@ -60,11 +64,11 @@ import csv
 import math
 with open('data_kebenaran.csv', 'w') as csvFile:
     writer = csv.writer(csvFile)
-    row = ['correct_ans_word','word_diff','cos_sim_en','jac_sim_en',"cos_sim_key","jac_sim_key","out"]
+    row = ['correct_ans_word','word_diff','cos_sim_all','jac_sim_all','cos_sim_en','jac_sim_en',"cos_sim_key","jac_sim_key","out"]
     writer.writerow(row)
     for i in range(len(data_out)):
         if not math.isnan(data_out[i]):
-            row = [jawaban_benar_word[i],word_difference[i],cos_sim_list_en[i],jac_sim_list_en[i],cos_sim_list_key[i],jac_sim_list_key[i],int(data_out[i])]
+            row = [jawaban_benar_word[i],word_difference[i],cos_sim_all[i],jac_sim_all[i],cos_sim_list_en[i],jac_sim_list_en[i],cos_sim_list_key[i],jac_sim_list_key[i],int(data_out[i])]
             writer.writerow(row)
 
 #%%
@@ -97,7 +101,7 @@ clf.score(X_test,Y_test)
 
 #%%
 from sklearn.neural_network import MLPClassifier
-clf  = MLPClassifier(hidden_layer_sizes=(5,6,2))
+clf  = MLPClassifier(hidden_layer_sizes=(5,3,5),max_iter=100000)
 clf.fit(X_train,Y_train)
 clf.score(X_test,Y_test)
 

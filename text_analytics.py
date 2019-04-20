@@ -28,11 +28,15 @@ class TextAnalytics:
         key_phrases = response.json()
         phrases = []
         for phrase in key_phrases['documents']:
-            phrase_str = "keyPhrases "
+            phrase_str = " "
             for item in phrase['keyPhrases']:
-                phrase_str += item +" "
-            phrases.append(phrase_str)
-
+                phrase_str += item +", "
+            
+            if phrase_str == " ":
+                phrases.append("null")
+            else:
+                phrases.append(phrase_str)
+        print(phrases)
         return phrases
 
     def get_entities(self, list_of_text):
@@ -47,11 +51,16 @@ class TextAnalytics:
         entities = []
 
         for entity_item in entity['documents']:
-            entity_str = "entList "
+            entity_str = "enlist "
             for item in entity_item['entities']:
-                entity_str += item['matches'][0]['text'] +' '
-            entities.append(entity_str)
-
+                entity_str += item['matches'][0]['text'] +', '
+            
+            if entity_str == " ":
+                entities.append("null")
+            else:
+                entities.append(entity_str)
+        
+        print(entities)
         return entities
 
     def get_translation(self,list_of_text):
@@ -150,16 +159,19 @@ class AnswerChecker:
         wrong_ans = 0
         half_right_ans = 0
         right_ans = 0
-        for i in range(len(entity_cor)):
+        for i in range(len(jawab_benar_list)):
             jawab_benar_word = len(jawab_benar_list[i].split())
-            word_diff = abs(len(jawab_benar_list[i].split())-len(jawab_benar_list[i].split()))
+            word_diff = abs(len(jawab_benar_list[i].split())-len(jawab_siswa_list[i].split()))
+            cos_sim_all = self.get_similarity(jawab_benar_list[i],jawab_siswa_list[i])
+            jac_sim_all = self.get_jaccard_sim(jawab_benar_list[i],jawab_siswa_list[i])
             entity_cos_skor = self.get_similarity(entity_cor[i],jawab_entity[i])
             keyph_cos_skor = self.get_similarity(keyph_cor[i],jawab_keyph[i])
             entity_jac_skor = self.get_jaccard_sim(entity_cor[i],jawab_entity[i])
             keyph_jac_skor = self.get_jaccard_sim(keyph_cor[i],jawab_keyph[i])
-            pred_score = np.array([jawab_benar_word,word_diff,entity_cos_skor,entity_jac_skor,keyph_cos_skor,keyph_jac_skor])
+            pred_score = np.array([jawab_benar_word,word_diff,cos_sim_all,jac_sim_all,entity_cos_skor,entity_jac_skor,keyph_cos_skor,keyph_jac_skor])
             pred_score = pred_score.reshape(1,-1)
             pred_value = self.loaded_model.predict(pred_score)
+            print(pred_value)
             if pred_value == 0:
                 wrong_ans += 1
             elif pred_value == 1:

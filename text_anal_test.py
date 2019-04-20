@@ -33,6 +33,6 @@ ans_check = AnswerChecker(subscription_key,trans_subscription_key)
 
 print(text_anal.get_translation(jawaban_benar_list))
 
-skor = ans_check.compareJawaban(jawaban_benar_list,jawaban_siswa_list)
+skor = ans_check.compare_jawaban(jawaban_benar_list,jawaban_siswa_list)
 print(skor)
      
