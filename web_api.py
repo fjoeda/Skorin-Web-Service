@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from text_analytics import AnswerChecker
+from soal_service import SoalService
 
 
 app = Flask(__name__)
@@ -26,6 +27,26 @@ def test_request():
         jawaban_siswa_list.append({"siswa":siswa["nama"],"jawaban":siswa["jawaban"]})
     result = compare_answer(jawaban_benar_list,jawaban_siswa_list)
     return jsonify(result)
+
+def collect_soal(soal_id):
+    soal_ser = SoalService("test")
+    return soal_ser.get_soal(soal_id)
+
+
+@app.route("/soal/",methods = ["GET"])
+def get_soal():
+
+    if "id" in request.args:
+        args = request.args
+        print(args['id'])
+        soals = collect_soal(args['id'])
+        print(soals)
+        return_val = {"soals":soals}
+        return jsonify(return_val)
+    else:
+        return_val = {"error":"invalid parameter"}
+        return jsonify(return_val)
+    
 
 
 
