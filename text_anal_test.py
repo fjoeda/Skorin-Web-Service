@@ -5,7 +5,7 @@ from text_analytics import TextAnalytics,AnswerChecker
 import json 
 
 
-subscription_key = '969c349c3c4043b3890c3c16a8f1d11f'
+subscription_key = 'bc94d092eca0417eaf16594265ef5190'
 
 with open('jawaban_benar.json') as f:
     jawaban_benar = json.load(f)
@@ -24,7 +24,7 @@ for siswa in jawaban_siswa["jawaban_siswa"]:
 
 
 
-trans_subscription_key = 'c5573255a62a494a874dc4063d9c9f17'
+trans_subscription_key = 'e780503cff4a4ff78e260a030302c91e'
 
 text_anal = TextAnalytics(subscription_key,trans_subscription_key)
 

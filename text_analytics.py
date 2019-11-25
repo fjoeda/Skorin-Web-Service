@@ -200,3 +200,12 @@ class AnswerChecker:
 
         return list_skor
 
+    def compare_jawaban_single(self,list_benar,list_jawaban):
+        list_benar_en = self.text_analytics.compose_all_english_answer(list_benar)
+        correct_entity = self.text_analytics.get_entities(list_benar_en)
+        correct_keyPhrase = self.text_analytics.get_key_phrases(list_benar_en)
+        list_jawab_en = self.text_analytics.compose_all_english_answer(list_jawaban)
+        jawab_entity = self.text_analytics.get_entities(list_jawab_en)
+        jawab_keyPh = self.text_analytics.get_key_phrases(list_jawab_en)
+        list_skor_siswa = self.get_list_compare(list_benar,list_jawaban,correct_entity,correct_keyPhrase,jawab_entity,jawab_keyPh)
+        return list_skor_siswa[0]
